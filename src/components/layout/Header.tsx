@@ -1,7 +1,5 @@
 import React from 'react';
-import { Send, ShieldCheck, User } from 'lucide-react';
-import { useTax } from '../../context/TaxContext';
-import { formatEuro } from '../../utils/formatters';
+import { Send } from 'lucide-react';
 
 interface HeaderProps {
   onNavigateToAbschluss: () => void;
@@ -9,9 +7,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigateToAbschluss, isSaving }) => {
-  const { state } = useTax();
-
-  const lohnsteuerKumuliert = state.lohnsteuerbescheinigungen.reduce((acc, l) => acc + l.zeile4_lohnsteuer, 0);
 
   return (
     <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/90 px-6 py-3 flex items-center justify-between">

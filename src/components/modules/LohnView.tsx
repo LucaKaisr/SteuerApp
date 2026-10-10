@@ -44,12 +44,6 @@ export const LohnView: React.FC = () => {
   // Monatsabrechnungen filtern
   const agMonatsabrechnungen = state.monatsabrechnungen.filter(m => m.arbeitgeberId === selectedAgId);
   const monateSummeBrutto = agMonatsabrechnungen.reduce((sum, m) => sum + m.brutto, 0);
-  const monateSummeSteuer = agMonatsabrechnungen.reduce((sum, m) => sum + m.lohnsteuer, 0);
-
-  // Jahresabgleich-Differenz
-  const diffBrutto = Math.abs(currentBescheinigung.zeile3_bruttoarbeitslohn - monateSummeBrutto);
-  const diffSteuer = Math.abs(currentBescheinigung.zeile4_lohnsteuer - monateSummeSteuer);
-  const hatAbweichung = currentBescheinigung.zeile3_bruttoarbeitslohn > 0 && agMonatsabrechnungen.length > 0 && (diffBrutto > 1 || diffSteuer > 1);
 
   // Speichern der Bescheinigung
   const handleUpdateBescheinigungField = (field: keyof Lohnsteuerbescheinigung, value: number | boolean | string) => {
@@ -129,7 +123,7 @@ export const LohnView: React.FC = () => {
           zeile27_av_arbeitnehmer: res.avArbeitnehmer || 0,
           zeile17_steuerfreie_fahrtkosten: res.steuerfreieFahrtkosten || 0,
           zeile18_pauschal_besteuerte_bezuege: res.pauschalBesteuerteBezuege || 0,
-          bestaetigt: false, // Erst manuell prüfen!
+          bestaetigt: false,
         };
 
         const exists = prev.lohnsteuerbescheinigungen.some(b => b.arbeitgeberId === selectedAgId);
@@ -141,7 +135,7 @@ export const LohnView: React.FC = () => {
         };
       });
 
-      setExtractSuccess('Werte erfolgreich extrahiert! Bitte prüfe die Beträge und bestätige sie mit dem Haken.');
+      setExtractSuccess('Werte erfolgreich extrahiert! Bitte prüfe die Beträge und bestätige sie.');
     } catch (err: any) {
       setExtractError(err.message || 'Extraktion fehlgeschlagen.');
     } finally {
@@ -155,80 +149,87 @@ export const LohnView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
-              <Briefcase className="w-6 h-6" />
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Top Header Card mit Arbeitgeber-Auswahl */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-teal-50 border border-teal-100 text-teal-700">
+              <Briefcase className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Modul 3.2 & 3.3: Lohn, Bescheinigungen & Abrechnungen</h2>
-              <p className="text-sm text-slate-400">
-                Lohnsteuerbescheinigungen (Anlage N) und Monatsabrechnungen mit Belegkontrolle & Jahresabgleich
+              <h2 className="text-lg font-bold text-slate-900">Lohnsteuerbescheinigungen & Abrechnungen</h2>
+              <p className="text-xs text-slate-500">
+                Amtliche Zeilen 3–27 (Anlage N) und Monatsabrechnungen mit Belegkontrolle
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Arbeitgeber-Auswahl Pills */}
-          <div className="flex flex-wrap gap-2">
-            {state.arbeitgeber.map((ag) => (
-              <button
-                key={ag.id}
-                onClick={() => setSelectedAgId(ag.id)}
-                className={`px-3 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-2 ${
-                  selectedAgId === ag.id
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                    : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
-                }`}
-              >
-                <span>{ag.name}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">
-                  StKl. {ag.steuerklasse}
-                </span>
-              </button>
-            ))}
-          </div>
+        {/* Arbeitgeber-Auswahl Pills */}
+        <div className="flex items-center gap-2">
+          {state.arbeitgeber.map((ag) => (
+            <button
+              key={ag.id}
+              onClick={() => setSelectedAgId(ag.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
+                selectedAgId === ag.id
+                  ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-bold'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span>{ag.name}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono">
+                StKl. {ag.steuerklasse}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-800 pb-2">
-        <button
-          onClick={() => setActiveTab('bescheinigung')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors ${
-            activeTab === 'bescheinigung'
-              ? 'bg-emerald-600 text-white'
-              : 'bg-slate-900 text-slate-400 hover:text-white'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          Lohnsteuerbescheinigung (Zeilen 3–27)
-        </button>
-        <button
-          onClick={() => setActiveTab('monate')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors ${
-            activeTab === 'monate'
-              ? 'bg-emerald-600 text-white'
-              : 'bg-slate-900 text-slate-400 hover:text-white'
-          }`}
-        >
-          <Calendar className="w-4 h-4" />
-          Monatsabrechnungen (Papierbelege) & Jahresabgleich
-        </button>
+      {/* Sub-Tabs: Bescheinigung vs. Monatsabrechnungen */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+          <button
+            onClick={() => setActiveTab('bescheinigung')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+              activeTab === 'bescheinigung'
+                ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-bold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-teal-600" />
+              <span>Lohnsteuerbescheinigung (Zeilen 3–27)</span>
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('monate')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+              activeTab === 'monate'
+                ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-bold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-teal-600" />
+              <span>Monatsabrechnungen & Jahresabgleich ({agMonatsabrechnungen.length}/12)</span>
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Feedback Messages */}
+      {/* Feedback Alerts */}
       {extractError && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-200 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
           <span>{extractError}</span>
         </div>
       )}
       {extractSuccess && (
-        <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-200 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
           <span>{extractSuccess}</span>
         </div>
       )}
@@ -236,269 +237,220 @@ export const LohnView: React.FC = () => {
       {/* TAB 1: Lohnsteuerbescheinigung */}
       {activeTab === 'bescheinigung' && (
         <div className="space-y-6">
-          {/* Upload & Gemini Extraktion Box */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  Elektronische Lohnsteuerbescheinigung für {currentAg.name}
+          {/* Upload & Gemini OCR Box */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-teal-600" />
+                <h3 className="font-bold text-base text-slate-950">
+                  Lohnsteuerbescheinigung für {currentAg.name}
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Lade den Beleg (PDF/Foto) hoch – Gemini extrahiert die Beträge automatisch in die amtlichen Zeilen. 
-                  Alle Felder bleiben manuell editierbar (B2-Vorgabe).
-                </p>
               </div>
-
-              <div>
-                <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium py-2 px-4 rounded-xl border border-slate-700 flex items-center gap-2 transition-colors">
-                  <Upload className="w-4 h-4 text-emerald-400" />
-                  <span>{isExtracting ? 'Analysiere Beleg...' : 'Bescheinigung scannen / hochladen'}</span>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={handleLsbUpload}
-                    disabled={isExtracting}
-                    className="hidden"
-                  />
-                </label>
-              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Lade die PDF-Bescheinigung hoch – Beträge werden automatisch den Zeilen 3–27 zugeordnet.
+              </p>
             </div>
+
+            <label className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition shadow-2xs cursor-pointer">
+              <Upload className="w-3.5 h-3.5" />
+              <span>{isExtracting ? 'Analysiere...' : 'Bescheinigung hochladen (PDF)'}</span>
+              <input type="file" accept=".pdf,image/*" onChange={handleLsbUpload} className="hidden" />
+            </label>
           </div>
 
-          {/* Formular Amtliche Zeilennummern */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-              <span className="text-xs font-semibold text-slate-300">
-                Amtliche Zeilen laut elektronischer Lohnsteuerbescheinigung
-              </span>
-              <label className="flex items-center gap-2 text-xs text-emerald-400 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={currentBescheinigung.bestaetigt}
-                  onChange={(e) => handleUpdateBescheinigungField('bestaetigt', e.target.checked)}
-                  className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
-                />
-                <span>Bescheinigung geprüft & freigegeben</span>
-              </label>
+          {/* Formularfelder in amtlicher Zeilenstruktur */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Linke Spalte: Steuerabzüge */}
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs space-y-4">
+              <h4 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">
+                Steuerabzüge & Bruttolohn (Zeilen 3–6)
+              </h4>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                    Zeile 3: Bruttoarbeitslohn (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={currentBescheinigung.zeile3_bruttoarbeitslohn || ''}
+                    onChange={(e) => handleUpdateBescheinigungField('zeile3_bruttoarbeitslohn', parseFloat(e.target.value) || 0)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                    Zeile 4: Einbehaltene Lohnsteuer (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={currentBescheinigung.zeile4_lohnsteuer || ''}
+                    onChange={(e) => handleUpdateBescheinigungField('zeile4_lohnsteuer', parseFloat(e.target.value) || 0)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold text-teal-700 focus:outline-none focus:border-teal-600 focus:bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                      Zeile 5: Solidaritätszuschlag (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={currentBescheinigung.zeile5_solidaritaetszuschlag || ''}
+                      onChange={(e) => handleUpdateBescheinigungField('zeile5_solidaritaetszuschlag', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                      Zeile 6: Kirchensteuer (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={currentBescheinigung.zeile6_kirchensteuer || ''}
+                      onChange={(e) => handleUpdateBescheinigungField('zeile6_kirchensteuer', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Zeile 3 */}
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <label className="block text-[11px] text-slate-400 mb-1">
-                  Zeile 3: Bruttoarbeitslohn einschl. Sachbezüge (€)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={currentBescheinigung.zeile3_bruttoarbeitslohn || ''}
-                  onChange={(e) => handleUpdateBescheinigungField('zeile3_bruttoarbeitslohn', parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
+            {/* Rechte Spalte: Sozialabgaben */}
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs space-y-4">
+              <h4 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">
+                Sozialversicherungsbeiträge (Zeilen 22–27)
+              </h4>
 
-              {/* Zeile 4 */}
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <label className="block text-[11px] text-slate-400 mb-1">
-                  Zeile 4: Einbehaltene Lohnsteuer (€)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={currentBescheinigung.zeile4_lohnsteuer || ''}
-                  onChange={(e) => handleUpdateBescheinigungField('zeile4_lohnsteuer', parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                      Zeile 22a: RV Arbeitgeber (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={currentBescheinigung.zeile22a_rv_arbeitgeber || ''}
+                      onChange={(e) => handleUpdateBescheinigungField('zeile22a_rv_arbeitgeber', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                    />
+                  </div>
 
-              {/* Zeile 5 */}
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <label className="block text-[11px] text-slate-400 mb-1">
-                  Zeile 5: Einbehaltener Solidaritätszuschlag (€)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={currentBescheinigung.zeile5_solidaritaetszuschlag || ''}
-                  onChange={(e) => handleUpdateBescheinigungField('zeile5_solidaritaetszuschlag', parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                      Zeile 23a: RV Arbeitnehmer (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={currentBescheinigung.zeile23a_rv_arbeitnehmer || ''}
+                      onChange={(e) => handleUpdateBescheinigungField('zeile23a_rv_arbeitnehmer', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                    />
+                  </div>
+                </div>
 
-              {/* Zeile 6 */}
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <label className="block text-[11px] text-slate-400 mb-1">
-                  Zeile 6: Einbehaltene Kirchensteuer (€)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={currentBescheinigung.zeile6_kirchensteuer || ''}
-                  onChange={(e) => handleUpdateBescheinigungField('zeile6_kirchensteuer', parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Z. 25: KV AN (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={currentBescheinigung.zeile25_kv_arbeitnehmer || ''}
+                      onChange={(e) => handleUpdateBescheinigungField('zeile25_kv_arbeitnehmer', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                    />
+                  </div>
 
-              {/* Zeile 22a / 23a RV */}
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <label className="block text-[11px] text-slate-400 mb-1">
-                  Zeile 22a: Arbeitgeberanteil RV (€)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={currentBescheinigung.zeile22a_rv_arbeitgeber || ''}
-                  onChange={(e) => handleUpdateBescheinigungField('zeile22a_rv_arbeitgeber', parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Z. 26: PV AN (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={currentBescheinigung.zeile26_pv_arbeitnehmer || ''}
+                      onChange={(e) => handleUpdateBescheinigungField('zeile26_pv_arbeitnehmer', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                    />
+                  </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <label className="block text-[11px] text-slate-400 mb-1">
-                  Zeile 23a: Arbeitnehmeranteil RV (€)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={currentBescheinigung.zeile23a_rv_arbeitnehmer || ''}
-                  onChange={(e) => handleUpdateBescheinigungField('zeile23a_rv_arbeitnehmer', parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Zeile 17: Steuerfreie Fahrtkosten */}
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 md:col-span-2">
-                <label className="block text-[11px] text-slate-400 mb-1">
-                  Zeile 17: Steuerfreie Arbeitgeberleistungen für Fahrten Wohnung–Tätigkeitsstätte (€)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={currentBescheinigung.zeile17_steuerfreie_fahrtkosten || ''}
-                  onChange={(e) => handleUpdateBescheinigungField('zeile17_steuerfreie_fahrtkosten', parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
-                />
-                <span className="text-[10px] text-slate-500 mt-1 block">
-                  Wichtig: Dieser Betrag mindert in Phase 3 automatisch deine absetzbare Entfernungspauschale!
-                </span>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Z. 27: AV AN (€)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={currentBescheinigung.zeile27_av_arbeitnehmer || ''}
+                      onChange={(e) => handleUpdateBescheinigungField('zeile27_av_arbeitnehmer', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-teal-600 focus:bg-white"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: Monatsabrechnungen & Jahresabgleich */}
+      {/* TAB 2: Monatsabrechnungen */}
       {activeTab === 'monate' && (
         <div className="space-y-6">
-          {/* Jahresabgleich-Box */}
-          <div className={`p-5 rounded-2xl border ${
-            hatAbweichung
-              ? 'bg-amber-950/20 border-amber-800/60 text-amber-200'
-              : 'bg-slate-900 border-slate-800 text-slate-300'
-          }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {hatAbweichung ? (
-                  <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
-                ) : (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                )}
-                <div>
-                  <h4 className="text-sm font-bold text-white">Automatischer Jahresabgleich (Monatswerte vs. Bescheinigung)</h4>
-                  <p className="text-xs text-slate-400">
-                    Summe der erfassten Monate: <strong>{formatEuro(monateSummeBrutto)} Brutto</strong> | <strong>{formatEuro(monateSummeSteuer)} Lohnsteuer</strong>
-                  </p>
-                </div>
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+              <div>
+                <h3 className="font-bold text-base text-slate-950">Monatliche Abrechnungsbelege 2026</h3>
+                <p className="text-xs text-slate-500">Erfasse die Gehaltsabrechnungen für den lückenlosen Jahresabgleich.</p>
               </div>
-              {hatAbweichung && (
-                <div className="text-right">
-                  <span className="text-xs font-mono text-amber-400 font-bold block">
-                    Abweichung: {formatEuro(diffBrutto)}
-                  </span>
-                  <span className="text-[10px] text-amber-300/80">Bitte Monatsbelege gegen Zeile 3 prüfen</span>
-                </div>
-              )}
+              <span className="text-xs font-mono font-bold text-teal-700 bg-teal-50 px-3 py-1 rounded-xl border border-teal-200">
+                Summe: {formatEuro(monateSummeBrutto)}
+              </span>
             </div>
-          </div>
 
-          {/* Kalenderraster Jan–Dez */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h3 className="text-base font-semibold text-white mb-2">Monatsübersicht 2026 ({currentAg.name})</h3>
-            <p className="text-xs text-slate-400 mb-4">
-              Für papierhafte Abrechnungen (insbesondere B.Schmitt mobile GmbH). Trage die Monatswerte ein oder nutze die Beleg-Zuordnung.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {monatsNamen.map((mName, idx) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {monatsNamen.map((name, idx) => {
                 const monatNum = idx + 1;
                 const existing = agMonatsabrechnungen.find(m => m.monat === monatNum);
 
                 return (
-                  <div key={monatNum} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-white">{mName}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded ${
-                        existing && existing.brutto > 0
-                          ? 'bg-emerald-500/10 text-emerald-400 font-semibold'
-                          : 'bg-slate-900 text-slate-500'
-                      }`}>
-                        {existing && existing.brutto > 0 ? 'Erfasst' : 'Offen'}
-                      </span>
+                  <div key={monatNum} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>{name}</span>
+                      {existing ? (
+                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          Erfasst
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-normal">Offen</span>
+                      )}
                     </div>
 
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 w-12">Brutto:</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          defaultValue={existing?.brutto || ''}
-                          onBlur={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            handleSaveMonat(monatNum, val, existing?.netto || 0, existing?.lohnsteuer || 0);
-                          }}
-                          className="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:border-emerald-500 focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 w-12">Netto:</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          defaultValue={existing?.netto || ''}
-                          onBlur={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            handleSaveMonat(monatNum, existing?.brutto || 0, val, existing?.lohnsteuer || 0);
-                          }}
-                          className="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:border-emerald-500 focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 w-12">LSt:</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          defaultValue={existing?.lohnsteuer || ''}
-                          onBlur={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            handleSaveMonat(monatNum, existing?.brutto || 0, existing?.netto || 0, val);
-                          }}
-                          className="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:border-emerald-500 focus:outline-none"
-                        />
-                      </div>
+                    <div className="space-y-1.5 text-xs">
+                      <input
+                        type="number"
+                        placeholder="Brutto (€)"
+                        defaultValue={existing?.brutto || ''}
+                        onBlur={(e) => handleSaveMonat(monatNum, parseFloat(e.target.value) || 0, existing?.netto || 0, existing?.lohnsteuer || 0)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-xs focus:outline-none focus:border-teal-600"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Lohnsteuer (€)"
+                        defaultValue={existing?.lohnsteuer || ''}
+                        onBlur={(e) => handleSaveMonat(monatNum, existing?.brutto || 0, existing?.netto || 0, parseFloat(e.target.value) || 0)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-xs focus:outline-none focus:border-teal-600"
+                      />
                     </div>
                   </div>
                 );

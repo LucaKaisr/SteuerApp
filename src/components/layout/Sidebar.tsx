@@ -9,17 +9,16 @@ import {
   Database, 
   Settings,
   Send,
-  ReceiptEuro,
-  RefreshCw
+  ReceiptEuro
 } from 'lucide-react';
 
 interface SidebarProps {
   currentModule: string;
   onSelectModule: (id: string) => void;
-  isSaving: boolean;
+  isSaving?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentModule, onSelectModule, isSaving }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentModule, onSelectModule }) => {
   const mainNavItems = [
     { id: 'dashboard', label: 'Steuer-Cockpit', icon: LayoutDashboard },
     { id: 'lohn', label: 'Lohn & Abrechnungen', icon: Briefcase },

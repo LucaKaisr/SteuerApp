@@ -8,8 +8,6 @@ import {
   FileCheck2,
   AlertCircle,
   Receipt,
-  Scale,
-  TrendingUp,
   Plus,
   Send,
   Calendar,
