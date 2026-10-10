@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TaxProvider, useTax } from './context/TaxContext';
 import { Sidebar } from './components/layout/Sidebar';
+import { Header } from './components/layout/Header';
 import { DashboardView } from './components/modules/DashboardView';
 import { BackupView } from './components/modules/BackupView';
 import { SettingsView } from './components/modules/SettingsView';
@@ -44,15 +45,21 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex font-sans antialiased selection:bg-teal-100 selection:text-teal-900">
       <Sidebar
         currentModule={currentModule}
         onSelectModule={setCurrentModule}
         isSaving={isSaving}
       />
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto max-h-screen">
-        {renderModule()}
-      </main>
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
+        <Header
+          onNavigateToAbschluss={() => setCurrentModule('abschluss')}
+          isSaving={isSaving}
+        />
+        <main className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto">
+          {renderModule()}
+        </main>
+      </div>
     </div>
   );
 };
