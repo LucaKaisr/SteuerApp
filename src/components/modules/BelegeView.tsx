@@ -175,6 +175,10 @@ export const BelegeView: React.FC = () => {
         return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'homeoffice':
         return 'bg-sky-50 text-sky-700 border-sky-200';
+      case 'fortbildung_bewerbung':
+        return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'reisekosten':
+        return 'bg-teal-50 text-teal-700 border-teal-200';
       default:
         return 'bg-slate-50 text-slate-700 border-slate-200';
     }
@@ -323,12 +327,14 @@ export const BelegeView: React.FC = () => {
                 className="bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 font-medium"
               >
                 <option value="all">Alle Kategorien</option>
-                <option value="arbeitsmittel">Arbeitsmittel</option>
+                <option value="arbeitsmittel">Arbeitsmittel & GWG</option>
                 <option value="studienkosten">Studienkosten (THM)</option>
                 <option value="wege_arbeit">Wege zur Arbeit</option>
                 <option value="homeoffice">Homeoffice</option>
+                <option value="fortbildung_bewerbung">Bewerbung & Umzug (§ 10 BUKG)</option>
+                <option value="reisekosten">Reisekosten & Spesen</option>
                 <option value="doppelte_haushaltsfuehrung">Doppelte Haushaltsführung</option>
-                <option value="sonstiges">Sonstiges</option>
+                <option value="sonstiges">Sonstiges & Kontoführung</option>
               </select>
             </div>
           </div>
@@ -485,8 +491,10 @@ export const BelegeView: React.FC = () => {
                 <option value="studienkosten">Studienkosten (Semesterbeitrag THM)</option>
                 <option value="wege_arbeit">Wege zur Arbeit (Tickets, Fahrten)</option>
                 <option value="homeoffice">Homeoffice-Ausstattung</option>
+                <option value="fortbildung_bewerbung">Bewerbung & Umzug (§ 10 BUKG)</option>
+                <option value="reisekosten">Reisekosten & Spesen</option>
                 <option value="doppelte_haushaltsfuehrung">Doppelte Haushaltsführung</option>
-                <option value="sonstiges">Sonstiges</option>
+                <option value="sonstiges">Sonstiges & Kontoführung</option>
               </select>
             </div>
 

@@ -35,8 +35,20 @@ class StorageService {
     try {
       const db = await this.getDB();
       const state = await db.get(STORE_STATE, KEY_CURRENT_STATE);
-      if (state && typeof state === 'object' && state.version) {
-        return state as AppState;
+      if (state && typeof state === 'object') {
+        const typedState = state as AppState;
+        // Migration: Falls Bescheinigungen oder Monatsabrechnungen noch leer sind
+        if (!typedState.lohnsteuerbescheinigungen || typedState.lohnsteuerbescheinigungen.length === 0) {
+          typedState.lohnsteuerbescheinigungen = INITIAL_APP_STATE.lohnsteuerbescheinigungen;
+        }
+        if (!typedState.monatsabrechnungen || typedState.monatsabrechnungen.length === 0) {
+          typedState.monatsabrechnungen = INITIAL_APP_STATE.monatsabrechnungen;
+        }
+        if (!typedState.arbeitgeber || typedState.arbeitgeber.length < 2) {
+          typedState.arbeitgeber = INITIAL_APP_STATE.arbeitgeber;
+        }
+        typedState.version = 2;
+        return typedState;
       }
     } catch (err) {
       console.warn('IndexedDB read failed, trying localStorage fallback:', err);
@@ -46,7 +58,14 @@ class StorageService {
     try {
       const local = localStorage.getItem('steuer_cockpit_2026_fallback');
       if (local) {
-        return JSON.parse(local) as AppState;
+        const parsed = JSON.parse(local) as AppState;
+        if (!parsed.lohnsteuerbescheinigungen || parsed.lohnsteuerbescheinigungen.length === 0) {
+          parsed.lohnsteuerbescheinigungen = INITIAL_APP_STATE.lohnsteuerbescheinigungen;
+        }
+        if (!parsed.monatsabrechnungen || parsed.monatsabrechnungen.length === 0) {
+          parsed.monatsabrechnungen = INITIAL_APP_STATE.monatsabrechnungen;
+        }
+        return parsed;
       }
     } catch (err) {
       console.error('localStorage fallback failed:', err);

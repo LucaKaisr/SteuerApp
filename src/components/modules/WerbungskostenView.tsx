@@ -42,9 +42,11 @@ export const WerbungskostenView: React.FC = () => {
   const agA = state.arbeitgeber.find(a => a.id === 'ag_a');
   const agB = state.arbeitgeber.find(a => a.id === 'ag_b');
 
-  // Fahrtkosten AG A (pfenning: 70 km) und AG B (B.Schmitt: 6 km)
-  const fahrtkostenA = berechnePendlerpauschale(agA?.entfernungKm || 70, tageArbeitA > 0 ? tageArbeitA : 65);
-  const fahrtkostenB = berechnePendlerpauschale(agB?.entfernungKm || 6, tageArbeitB > 0 ? tageArbeitB : 45);
+  // Fahrtkosten AG A (pfenning: 70 km) und AG B (B.Schmitt: 9 km)
+  const distA = agA?.entfernungKm || 70;
+  const distB = agB?.entfernungKm || 9;
+  const fahrtkostenA = berechnePendlerpauschale(distA, tageArbeitA > 0 ? tageArbeitA : 65);
+  const fahrtkostenB = berechnePendlerpauschale(distB, tageArbeitB > 0 ? tageArbeitB : 45);
   const summeFahrtkosten = fahrtkostenA + fahrtkostenB;
 
   // 2. Homeoffice-Pauschale: 6 € / Tag, max 210 Tage (1.260 €)
@@ -225,14 +227,14 @@ export const WerbungskostenView: React.FC = () => {
               {/* AG B: B.Schmitt mobile */}
               <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-900">B.Schmitt mobile GmbH (Mannheim)</span>
+                  <span className="text-xs font-bold text-slate-900">B.Schmitt mobile GmbH (Frankfurt am Main)</span>
                   <span className="text-xs font-mono text-teal-700 font-bold">{formatEuro(fahrtkostenB)}</span>
                 </div>
                 <div className="text-xs text-slate-500 space-y-1">
-                  <div>Einfache Entfernung: <strong className="text-slate-900">6 km</strong></div>
+                  <div>Einfache Entfernung: <strong className="text-slate-900">{distB} km</strong> (Westerbachstraße)</div>
                   <div>Gefahrene Arbeitstage: <strong className="text-slate-900">{tageArbeitB > 0 ? tageArbeitB : 45} Tage</strong></div>
                   <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-200">
-                    6 km × 0,30 € = 1,80 € / Tag
+                    {distB} km × 0,30 € = {(distB * 0.30).toFixed(2).replace('.', ',')} € / Tag
                   </div>
                 </div>
               </div>
